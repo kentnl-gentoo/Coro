@@ -1399,6 +1399,7 @@ runops_trace (pTHX)
                       if (CxTYPE (cx) == CXt_SUB && oldcxix < cxstack_ix)
                         {
                           dSP;
+                          AV *argarray;
                           GV *gv = CvGV (cx->blk_sub.cv);
                           SV *fullname = sv_2mortal (newSV (0));
 
@@ -1412,7 +1413,16 @@ runops_trace (pTHX)
                           PUSHMARK (SP);
                           PUSHs (&PL_sv_yes);
                           PUSHs (fullname);
-                          PUSHs (CxHASARGS (cx) ? sv_2mortal (newRV_inc ((SV *)cx->blk_sub.argarray)) : &PL_sv_undef);
+                          argarray =
+# if PERL_VERSION_ATLEAST(5,23,8)
+                            ((AV*)(AvARRAY(MUTABLE_AV(
+                              PadlistARRAY(CvPADLIST(cx->blk_sub.cv))[
+                              CvDEPTH(cx->blk_sub.cv)]))[0]));
+#else
+                            cx->blk_sub.argarray;
+#endif
+
+                          PUSHs (CxHASARGS (cx) ? sv_2mortal (newRV_inc ((SV *)argarray)) : &PL_sv_undef);
                           PUTBACK;
                           cb = hv_fetch ((HV *)SvRV (coro_current), "_trace_sub_cb", sizeof ("_trace_sub_cb") - 1, 0);
                           if (cb) call_sv (*cb, G_KEEPERR | G_EVAL | G_VOID | G_DISCARD);
