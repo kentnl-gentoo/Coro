@@ -83,8 +83,13 @@ VAR(compcv,        CV *)           /* currently compiling subroutine */
 
 VAR(comppad,       AV *)           /* storage for lexically scoped temporaries */
 VAR(comppad_name,  AV *)           /* variable names for "my" variables */
+#if PERL_VERSION_ATLEAST (5,25,6)
+VAR(comppad_name_fill,     PADOFFSET)    /* last "introduced" variable offset */
+VAR(comppad_name_floor,    PADOFFSET)    /* start of vars in innermost block */
+#else
 VAR(comppad_name_fill,     I32)    /* last "introduced" variable offset */
 VAR(comppad_name_floor,    I32)    /* start of vars in innermost block */
+#endif
 
 VAR(runops,        runops_proc_t)  /* for tracing support */
 
